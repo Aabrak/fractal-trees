@@ -17,12 +17,21 @@ function randomRange(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
+function easeInOutQuad(t, b, c, d) {
+  t /= d/2;
+  if (t < 1) return c/2*t*t + b;
+  t--;
+  return -c/2 * (t*(t-2) - 1) + b;
+};
+
 /* IMPORTS
 ------------------------*/
 
 const can = document.getElementById("can");
 const ctx = can.getContext("2d");
 let globAng = 0;
+let tempAng = 0;
+let maxAng = 20;
 let blobCol = colorGen();
 let smalBlob = "#FFF"
 let incr = 0.1;
@@ -50,50 +59,39 @@ function drawFract(sX, sY, wid, len, color, ang) {
   len *= 0.75;
 
   if(len < 10) {
-	ctx.restore();
-	return;
+    ctx.restore();
+    return;
   }
 
   if(len > 15) {
-	drawFract(0, -len, wid, len, blobCol, ang + globAng/changAng);
-	drawFract(0, -len, wid, len, blobCol, ang - globAng/changAng2);
+    drawFract(0, -len, wid, len, blobCol, ang + globAng/changAng);
+    drawFract(0, -len, wid, len, blobCol, ang - globAng/changAng2);
   } else {
-	drawFract(0, -len, wid, len, smalBlob, ang + globAng);
-	drawFract(0, -len, wid, len, smalBlob, ang - globAng);
+    drawFract(0, -len, wid, len, smalBlob, ang + globAng);
+    drawFract(0, -len, wid, len, smalBlob, ang - globAng);
   }
-  
-  // drawFract(0, -len, wid, len, blobCol, ang + globAng);
-  // drawFract(0, -len, wid, len, blobCol, ang - globAng);
 
   ctx.restore();
 }
 
-// drawFract(can.width/2, can.height - 10, 2, 240, colorGen(), 0);
-
 function loop() {
-  // ctx.clearRect(0, 0, can.width, can.height);
-  // drawFract(can.width/2, can.height - 50, 2, globLen, blobCol, 0);
 
-  if (globAng > 20) {
-	incr = -incr;
-  } else if (globAng < 0) {
+  if (globAng > maxAng || tempAng > maxAng) {
+	  incr = -incr;
+  } else if (globAng < 0 || tempAng < 0) {
 	  blobCol = colorGen();
 	  let rand = randomRange(100, 255);
 	  smalBlob = `rgba(${rand}, ${rand}, ${rand}, ${0.3})`;
 	  incr = -incr;
-	  changAng = randomRange(0.5, 4);
-	  changAng2 = randomRange(0.5, 4);
+	  changAng = randomRange(2, 4);
+	  changAng2 = randomRange(2, 4);
   }
 
   ctx.clearRect(0, 0, can.width, can.height);
   drawFract(can.width/2, can.height - 10, 2, globLen, blobCol, 0);
   window.requestAnimationFrame(loop);
 
-  globAng += incr;
+  tempAng += incr;
+  globAng = easeInOutQuad(tempAng, 0, 10, maxAng);
 
 } window.requestAnimationFrame(loop);
-
-document.addEventListener("mousemove", function(e) {
-  // if (e.clientX != 0) globAng = e.clientX;
-  // window.requestAnimationFrame(loop);
-});
